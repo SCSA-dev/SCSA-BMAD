@@ -22,8 +22,23 @@ Traditional AI tools do the thinking for you, producing average results. BMad ag
 
 **Prerequisites**: [Node.js](https://nodejs.org) v20+
 
+### For GitHub Organization Members
+
+This package is published to GitHub Packages as a private package. To install:
+
+1. **Authenticate with GitHub Packages** — Create a `.npmrc` file in your project root:
+
+```properties
+@m-and-t-technology-ltd:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
+```
+
+Replace `YOUR_GITHUB_TOKEN` with a [GitHub Personal Access Token](https://github.com/settings/tokens) that has `read:packages` permission.
+
+2. **Install BMad Method**:
+
 ```bash
-npx bmad-method@alpha install
+npx @m-and-t-technology-ltd/bmad-method@alpha install
 ```
 
 Follow the installer prompts to configure your project.

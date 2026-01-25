@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@M-And-T-Technology-Ltd/bmad-method",
+  "name": "@m-and-t-technology-ltd/bmad-method",
   "version": "6.0.0-alpha.23",
   "description": "Breakthrough Method of Agile AI-driven Development",
   "keywords": [
@@ -23,6 +23,15 @@
     "bmad": "tools/bmad-npx-wrapper.js",
     "bmad-method": "tools/bmad-npx-wrapper.js"
   },
+  "files": [
+    "src/",
+    "tools/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "package.json"
+  ],
   "scripts": {
     "bmad:install": "node tools/cli/bmad-cli.js install",
     "bundle": "node tools/cli/bundlers/bundle-web.js all",
