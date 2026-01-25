@@ -154,10 +154,10 @@ jobs:
           VERSION="${{ steps.version.outputs.new_version }}"
           if [[ "$VERSION" == *"alpha"* ]] || [[ "$VERSION" == *"beta"* ]]; then
             echo "Publishing prerelease version with --tag alpha"
-            npm publish --tag alpha --provenance --access restricted
+            npm publish --tag alpha --access restricted
           else
             echo "Publishing stable version with --tag latest"
-            npm publish --tag latest --provenance --access restricted
+            npm publish --tag latest --access restricted
           fi
 
       - name: Create GitHub Release
