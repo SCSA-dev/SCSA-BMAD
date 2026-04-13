@@ -1,0 +1,7 @@
+# Pre-configured SCSA marketplace sources.
+# These are automatically resolved during installation alongside official modules.
+# Each source must be a Git URL pointing to a repo with a .claude-plugin/marketplace.json file.
+
+sources:
+  - url: https://github.com/SCSA-dev/scsa-bmad-agents.git
+    defaultSelected: true

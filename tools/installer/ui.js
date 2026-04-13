@@ -605,11 +605,14 @@ class UI {
     // Returns { codes, didBrowse } so we know if the user entered the flow
     const communityResult = await this._browseCommunityModules(installedModuleIds);
 
-    // Phase 3: Custom URL modules
+    // Phase 3: Pre-configured SCSA marketplace sources (auto-loaded, no user prompt)
+    const scsaSelected = await this._autoLoadPreconfiguredSources(installedModuleIds);
+
+    // Phase 4: Custom URL modules
     const customSelected = await this._addCustomUrlModules(installedModuleIds);
 
     // Merge all selections
-    const allSelected = new Set([...officialSelected, ...communityResult.codes, ...customSelected]);
+    const allSelected = new Set([...officialSelected, ...communityResult.codes, ...scsaSelected, ...customSelected]);
 
     // Auto-include installed non-official modules that the user didn't get
     // a chance to manage (they declined to browse). If they did browse,
@@ -1133,12 +1136,92 @@ class UI {
       }
     }
 
+    // Include pre-configured SCSA marketplace sources
+    const scsaCodes = await this._autoLoadPreconfiguredSources(installedModuleIds);
+    for (const code of scsaCodes) {
+      if (!defaultModules.includes(code)) defaultModules.push(code);
+    }
+
     // If no defaults found, use 'bmm' as the fallback default
     if (defaultModules.length === 0) {
       defaultModules.push('bmm');
     }
 
     return defaultModules;
+  }
+
+  /**
+   * Auto-load modules from pre-configured SCSA marketplace sources (scsa-sources.yaml).
+   * Resolves each URL via CustomModuleManager and returns all discovered module codes.
+   * Modules flagged defaultSelected:true in scsa-sources.yaml are always included.
+   * @param {Set} installedModuleIds - Currently installed module IDs
+   * @returns {Array<string>} Module codes to auto-include
+   */
+  async _autoLoadPreconfiguredSources(installedModuleIds = new Set()) {
+    const yaml = require('yaml');
+    const sourcesPath = path.join(__dirname, 'modules', 'scsa-sources.yaml');
+    let sourcesConfig;
+
+    try {
+      const content = await fs.readFile(sourcesPath, 'utf8');
+      sourcesConfig = yaml.parse(content);
+    } catch {
+      return [];
+    }
+
+    const sources = sourcesConfig?.sources;
+    if (!Array.isArray(sources) || sources.length === 0) return [];
+
+    const { CustomModuleManager } = require('./modules/custom-module-manager');
+    const customMgr = new CustomModuleManager();
+    const allCodes = [];
+
+    for (const entry of sources) {
+      const url = entry?.url;
+      if (!url) continue;
+
+      const s = await prompts.spinner();
+      s.start(`Loading SCSA marketplace from ${entry.url}...`);
+
+      let sourceResult;
+      try {
+        sourceResult = await customMgr.resolveSource(url, { skipInstall: true, silent: true });
+        s.stop('SCSA marketplace loaded');
+      } catch (error) {
+        s.error(`Failed to load SCSA marketplace: ${error.message}`);
+        continue;
+      }
+
+      if (sourceResult.mode !== 'discovery' || !sourceResult.marketplace) {
+        s.error('No marketplace.json found in SCSA source');
+        continue;
+      }
+
+      let plugins;
+      try {
+        plugins = await customMgr.discoverModules(sourceResult.marketplace, sourceResult.sourceUrl);
+      } catch {
+        continue;
+      }
+
+      const effectiveRepoPath = sourceResult.repoPath || sourceResult.rootDir;
+      for (const plugin of plugins) {
+        try {
+          const resolved = await customMgr.resolvePlugin(effectiveRepoPath, plugin.rawPlugin, sourceResult.sourceUrl, null);
+          for (const mod of resolved) {
+            if (entry.defaultSelected || installedModuleIds.has(mod.code)) {
+              allCodes.push(mod.code);
+              const versionStr = mod.version ? ` v${mod.version}` : '';
+              await prompts.log.info(`  SCSA module: ${mod.name}${versionStr}`);
+            }
+          }
+        } catch {
+          // Skip unresolvable plugins
+        }
+      }
+    }
+
+    return allCodes;
   }
 
   /**
