@@ -1,5 +1,6 @@
-# This file allows these modules under bmad-code-org to also be installed with the bmad method installer, while
-# allowing us to keep the source of these projects in separate repos.
+# Fallback module registry — used only when the BMad Marketplace repo
+# (bmad-code-org/bmad-plugins-marketplace) is unreachable.
+# The remote registry/official.yaml is the source of truth.
 
 modules:
   bmad-builder:
@@ -51,7 +52,7 @@ modules:
     defaultSelected: false
     type: community
     npmPackage: bmad-method-wds-expansion
-    
+
   scsa-module:
     url: https://github.com/SCSA-dev/scsa-bmad-agents.git
     module-definition: scsa/module.yaml
